@@ -12,7 +12,8 @@ namespace Library.Core.Abstractions.Repositories
         TModel? Update(TModel model);
         List<TModel> GetAll();
         TModel? Get(string key);
-
         TModel? Delete(TModel model);
+
+        int Count();
     }
 }

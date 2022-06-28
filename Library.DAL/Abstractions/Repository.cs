@@ -69,6 +69,11 @@ namespace Library.DAL.Abstractions
             }
         }
 
+        public int Count()
+        {
+            return entities.Count;
+        }
+
         protected ConcurrentDictionary<string, TModel> entities = new ConcurrentDictionary<string, TModel>();
     }
 }

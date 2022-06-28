@@ -8,7 +8,6 @@ namespace Library.Tests
 {
     public class BookRepositoryTests
     {
-
         public BookRepositoryTests()
         {
             repository = new BookRepository();
@@ -89,7 +88,6 @@ namespace Library.Tests
             Assert.Equal(updatedBook.Quantity, book.Quantity);
         }
 
-
         [Fact]
         public void CanGetAllBoks()
         {
@@ -106,6 +104,42 @@ namespace Library.Tests
             // Asert
             Assert.Equal(allBooks.Count, numberOfBooks);
             Assert.Contains(allBooks[bookIndex], books);
+        }
+
+        [Fact]
+        public void CanDeleteBook()
+        {
+            // Arange
+            var addedBook = repository.Add(books[0]);
+
+            // Act
+            var deletedBook = repository.Delete(addedBook);
+
+            // Asert
+            Assert.Equal(0, repository.Count());
+            Assert.Empty(repository.GetAll());
+            Assert.NotNull(deletedBook);
+        }
+
+        [Fact]
+        public void CanGetTheNumberOfBooks()
+        {
+            // Arange
+            var numberOfAddedBooks = randomGenerator.Next(1, numberOfBooks);
+            var booksForAdding = books.GetRange(0, numberOfAddedBooks);
+
+            var addedBooks = new List<Book?>();
+            foreach (var book in booksForAdding)
+            {
+                var addedBook = repository.Add(book);
+                addedBooks.Add(addedBook);
+            }
+
+            // Act
+            var currentNumberOfBooks = repository.Count();
+
+            // Asert
+            Assert.Equal(numberOfAddedBooks, currentNumberOfBooks);
         }
 
         [Fact]
