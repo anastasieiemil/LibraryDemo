@@ -89,6 +89,27 @@ namespace Library.Tests
         }
 
         [Fact]
+        public void CannotModifyAGettedBook()
+        {
+            // Arange
+            var book = new Book
+            {
+                ISBN = "Test",
+                Quantity = 10,
+            };
+            repository.Add(book);
+
+            // Act
+            var gettedBook = repository.Get(book.ISBN);
+            gettedBook.Quantity = 105;
+
+            var gettedBook2 = repository.Get(book.ISBN);
+
+            // Asert
+            Assert.Equal(book.Quantity, gettedBook2.Quantity);
+        }
+
+        [Fact]
         public void CanGetAllBoks()
         {
             // Arange
