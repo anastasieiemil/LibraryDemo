@@ -1,6 +1,7 @@
 ﻿using Library.Core.Abstractions.Repositories;
 using Library.Core.Domain;
 using Library.DAL.Abstractions;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,16 +14,17 @@ namespace Library.DAL.Concret
     {
         public override Book? Update(Book book)
         {
-            if(entities.ContainsKey(book.ISBN))
+            var currentBook = Get(book.Key);
+            if (currentBook != null)
             {
-                var currentBook = entities[book.ISBN];
+                var data = entities[book.Key];
 
                 currentBook.Name = book.Name;
                 currentBook.Price = book.Price;
                 currentBook.Quantity = book.Quantity;
                 currentBook.CurrentQuantity = book.CurrentQuantity;
 
-                entities.TryUpdate(currentBook.Key, currentBook, entities[book.ISBN]);
+                entities.TryUpdate(currentBook.Key, JsonConvert.SerializeObject(currentBook), data);
                 return book;
             }
             else

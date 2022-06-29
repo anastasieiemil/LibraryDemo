@@ -2,6 +2,7 @@ using Library.Core.Domain;
 using Library.DAL.Concret;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace Library.Tests
@@ -11,8 +12,7 @@ namespace Library.Tests
         public BookRepositoryTests()
         {
             repository = new BookRepository();
-
-            BuildBooks();
+            books = Utils.BuildBooks(numberOfBooks);
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace Library.Tests
 
             // Asert
             Assert.NotNull(searchedBook);
-            Assert.Equal(searchedBook, bookForSearching);
+            Assert.Equal(bookForSearching?.Key, searchedBook?.Key);
         }
 
         [Fact]
@@ -97,13 +97,14 @@ namespace Library.Tests
                 repository.Add(book);
             }
             var bookIndex = randomGenerator.Next(numberOfBooks);
+            var keys = books.Select(book => book.Key).ToList();
 
             // Act
             var allBooks = repository.GetAll();
 
             // Asert
             Assert.Equal(allBooks.Count, numberOfBooks);
-            Assert.Contains(allBooks[bookIndex], books);
+            Assert.Contains(allBooks[bookIndex].Key, keys);
         }
 
         [Fact]
@@ -159,25 +160,6 @@ namespace Library.Tests
         }
 
         #region private
-
-        private void BuildBooks()
-        {
-            books = new List<Book>();
-
-            for (int i = 0; i < numberOfBooks; i++)
-            {
-                var quantity = randomGenerator.Next(100);
-                books.Add(new Book
-                {
-                    Name = $"Book {i}",
-                    ISBN = $"ISBN book {i}",
-                    Price = (decimal)(randomGenerator.Next(1000)) / (randomGenerator.Next(10) + 1),
-                    Quantity = quantity,
-                    CurrentQuantity = quantity,
-                });
-            }
-
-        }
 
         private static readonly Random randomGenerator = new Random();
         private static readonly int numberOfBooks = 20;

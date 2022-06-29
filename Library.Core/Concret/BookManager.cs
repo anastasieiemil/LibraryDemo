@@ -22,6 +22,12 @@ namespace Library.Core.Concret
         {
             repositories = DependencyInjector.Get<IRepositoryProvider>();
         }
+
+        public BookManager(IRepositoryProvider repo)
+        {
+            repositories = repo;
+        }
+
         public bool Add(Book book)
         {
             // Validate.

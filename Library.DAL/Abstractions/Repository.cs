@@ -1,5 +1,6 @@
 ﻿using Library.Core.Abstractions;
 using Library.Core.Abstractions.Repositories;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace Library.DAL.Abstractions
             }
             else
             {
-                entities.TryAdd(model.Key, model);
+                entities.TryAdd(model.Key, JsonConvert.SerializeObject(model));
                 return model;
             }
         }
@@ -28,8 +29,15 @@ namespace Library.DAL.Abstractions
         {
             if (entities.ContainsKey(model.Key))
             {
-                entities.TryRemove(model.Key,out TModel? removedItem);
-                return removedItem;
+                if(entities.TryRemove(model.Key, out string removedItem))
+                {
+                    return model;
+                }
+                else
+                {
+                    return null;
+
+                }
             }
             else
             {
@@ -39,7 +47,8 @@ namespace Library.DAL.Abstractions
 
         public virtual List<TModel> GetAll()
         {
-            return entities.Values.ToList();
+            return entities.Values.Select(x => JsonConvert.DeserializeObject<TModel>(x))
+                                         .ToList();
         }
 
         public virtual TModel? Update(TModel model)
@@ -47,8 +56,7 @@ namespace Library.DAL.Abstractions
             if (entities.ContainsKey(model.Key))
             {
                 var currentBook = entities[model.Key];
-
-                return currentBook;
+                return JsonConvert.DeserializeObject<TModel>(currentBook);
             }
             else
             {
@@ -61,7 +69,7 @@ namespace Library.DAL.Abstractions
             if (entities.ContainsKey(key))
             {
                 var currentBook = entities[key];
-                return currentBook;
+                return JsonConvert.DeserializeObject<TModel>(currentBook);
             }
             else
             {
@@ -74,6 +82,6 @@ namespace Library.DAL.Abstractions
             return entities.Count;
         }
 
-        protected ConcurrentDictionary<string, TModel> entities = new ConcurrentDictionary<string, TModel>();
+        protected ConcurrentDictionary<string, string> entities = new ConcurrentDictionary<string, string>();
     }
 }
