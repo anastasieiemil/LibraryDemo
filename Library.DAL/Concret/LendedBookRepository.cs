@@ -15,12 +15,12 @@ namespace Library.DAL.Concret
 
         List<LendedBook> ILendedBookRepository.Get(string ISBN, string personCode)
         {
-            //var lends = JsonConvert.DeserializeObject<List<LendedBook>>(entities.Values);
+            var lends = entities.Values.Select(x => JsonConvert.DeserializeObject<LendedBook>(x)).ToList();
 
-            //return entities.Where(x => x.Value.PersonCode == personCode && x.Value.Book.ISBN == ISBN)
-            //               .Select(x => x.Value)
-            //               .ToList();
-            return null;
+            return lends.Where(x => x.PersonCode == personCode && x.Book.ISBN == ISBN)
+                           .Where(x => x != null)
+                           .Select(x => x)
+                           .ToList();
         }
     }
 }
