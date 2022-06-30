@@ -12,9 +12,6 @@ namespace Library.Core.Concret
     {
         private readonly IRepositoryProvider repositories;
 
-        // Protects repository.
-        private volatile object repositoryMutex = new object();
-        private static readonly int MUTEX_TIMEOUT = 2000;
         private static readonly int MAX_RENT_PERIOD = 14;       // Days.
         private static readonly decimal EXTRA_PRICE = 0.01M;
 
@@ -40,81 +37,96 @@ namespace Library.Core.Concret
 
         public bool Lend(string ISBN, string personName, string personCode)
         {
-            // Validate.
-
-            // Lock dal and try to create and save a lendedBook.
-            if (Monitor.TryEnter(repositoryMutex, MUTEX_TIMEOUT))
+            try
             {
-                var book = repositories.Books.Get(ISBN);
-
-                // Check if the book is available.
-                if (book == null || book.CurrentQuantity == 0)
+                // Lock dal and try to create and save a lendedBook.
+                if (ResourceManagerLocker.LockResource(repositories.Books, ISBN))
                 {
-                    Monitor.Exit(repositoryMutex);
+                    var book = repositories.Books.Get(ISBN);
+
+                    // Check if the book is available.
+                    if (book == null || book.CurrentQuantity == 0)
+                    {
+                        return false;
+                    }
+
+                    // Create lend.
+                    var lend = new LendedBook
+                    {
+                        PersonCode = personCode,
+                        PersonName = personName,
+                        Book = book,
+                        TimeStamp = DateTime.Now,
+                        Price = book.Price,
+                    };
+
+                    // Add Lend;
+                    var savedLend = repositories.BookLends.Add(lend);
+                    if (savedLend == null)
+                    {
+                        return false;
+                    }
+
+                    // Update the book.
+                    --book.CurrentQuantity;
+                    repositories.Books.Update(book);
+
+                    return true;
+                }
+                else
+                {
                     return false;
                 }
-
-                // Create lend.
-                var lend = new LendedBook
-                {
-                    PersonCode = personCode,
-                    PersonName = personName,
-                    Book = book,
-                    TimeStamp = DateTime.Now,
-                    Price = book.Price,
-                };
-
-                // Add Lend;
-                var savedLend = repositories.BookLends.Add(lend);
-                if (savedLend == null)
-                {
-                    Monitor.Exit(repositoryMutex);
-                    return false;
-                }
-
-                // Update the book.
-                --book.CurrentQuantity;
-                repositories.Books.Update(book);
-
-                Monitor.Exit(repositoryMutex);
-                return true;
             }
-            else
+            catch { }
+            finally
             {
-                return false;
+                ResourceManagerLocker.ReleaseResource(repositories.Books, ISBN);
             }
+
+            return false;
         }
 
         public bool Return(LendedBook lend)
         {
-            // Lock dal and try to create and save a lendedBook.
-            if (Monitor.TryEnter(repositoryMutex, MUTEX_TIMEOUT))
-            {
-                // Get lend.
-                //var lend = lends.Get(ISBN, personCode);
-                if (lend == null || lend.IsReturned)
-                {
-                    Monitor.Exit(repositoryMutex);
-                    return false;
-                }
-
-                // Update Lend.
-                lend.IsReturned = true;
-                lend.ReturnedTimeStamp = DateTime.Now;
-                repositories.BookLends.Update(lend);
-
-                // Update the book.
-                var book = lend.Book;
-                --book.CurrentQuantity;
-                repositories.Books.Update(book);
-
-                Monitor.Exit(repositoryMutex);
-                return true;
-            }
-            else
+            if (lend == null)
             {
                 return false;
+            } else if (lend.IsReturned)
+            {
+                return true;
+            }    
+
+            try
+            {
+                // Lock dal and try to create and save a lendedBook.
+                if (ResourceManagerLocker.LockResource(repositories.BookLends, lend.Key))
+                {
+                    // Update Lend.
+                    lend.IsReturned = true;
+                    lend.ReturnedTimeStamp = DateTime.Now;
+                    repositories.BookLends.Update(lend);
+
+                    // Update the book.
+                    var book = lend.Book;
+                    --book.CurrentQuantity;
+                    repositories.Books.Update(book);
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
+
+            catch { }
+            finally
+            {
+                ResourceManagerLocker.ReleaseResource(repositories.BookLends, lend.Key);
+            }
+
+            return false;
         }
 
         public decimal GetPrice(LendedBook lend)
@@ -134,6 +146,11 @@ namespace Library.Core.Concret
         public List<Book> GetAll()
         {
             return repositories.Books.GetAll();
+        }
+
+        public List<LendedBook> GetLends(string ISBN,  string personCode)
+        {
+           return repositories.BookLends.Get(ISBN,personCode);
         }
 
         public Book? Search(string isbn)

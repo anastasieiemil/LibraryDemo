@@ -21,5 +21,8 @@ namespace Library.Core.Abstractions
         Book? Search(string isbn);
 
         List<Book> GetAll();
+
+        public List<LendedBook> GetLends(string ISBN, string personCode);
+
     }
 }
