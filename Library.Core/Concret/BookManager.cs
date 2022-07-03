@@ -27,8 +27,6 @@ namespace Library.Core.Concret
 
         public bool Add(Book book)
         {
-            // Validate.
-
             // Add book.
             var savedBook = repositories.Books.Add(book);
 
@@ -58,6 +56,7 @@ namespace Library.Core.Concret
                         Book = book,
                         TimeStamp = DateTime.Now,
                         Price = book.Price,
+                        ID = GetIndex()
                     };
 
                     // Add Lend;
@@ -92,7 +91,7 @@ namespace Library.Core.Concret
             if (lend == null || lend.IsReturned)
             {
                 return false;
-            }   
+            }
 
             try
             {
@@ -145,14 +144,33 @@ namespace Library.Core.Concret
             return repositories.Books.GetAll();
         }
 
-        public List<LendedBook> GetLends(string ISBN,  string personCode)
+        public List<LendedBook> GetLends(string ISBN, string personCode)
         {
-           return repositories.BookLends.Get(ISBN,personCode);
+            return repositories.BookLends.Get(ISBN, personCode);
         }
 
         public Book? Search(string isbn)
         {
             return repositories.Books.Get(isbn);
         }
+
+        #region private
+
+        /// <summary>
+        /// Provides unique index.
+        /// </summary>
+        /// <returns></returns>
+        private int GetIndex()
+        {
+            lock (indexLocker)
+            {
+                return index++;
+            }
+        }
+
+        private static int index = 1;
+
+        private static volatile object indexLocker = new object();
+        #endregion
     }
 }

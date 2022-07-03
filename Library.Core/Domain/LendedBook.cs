@@ -18,6 +18,6 @@ namespace Library.Core.Domain
         public string PersonCode { get; set; } = null!;
         public decimal Price { get; set; }
 
-        public string Key => $"{Book.ISBN}_{PersonCode}_{TimeStamp.Ticks}";
+        public string Key => ID.ToString();
     }
 }

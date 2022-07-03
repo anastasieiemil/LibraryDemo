@@ -15,5 +15,19 @@ namespace Library.Core.Domain
         public int CurrentQuantity { get; set; }
         public decimal Price { get; set; }
         public string Key { get => ISBN; }
+
+        public override string ToString()
+        {
+            var type = typeof(Book);
+            StringBuilder stringBuilder = new StringBuilder();
+            var properties = type.GetProperties();
+
+            foreach(var property in properties)
+            {
+                stringBuilder.Append($"{property.Name}:{property.GetValue(this)};");
+            }
+
+            return stringBuilder.ToString();
+        }
     }
 }

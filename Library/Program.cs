@@ -89,7 +89,7 @@ void Run()
 
                     if (response.IsSuccess)
                     {
-                        if (bookManager.Lend(response.Obj.ISBN,response.Obj.PersonName,response.Obj.PersonCode))
+                        if (bookManager.Lend(response.Obj.ISBN, response.Obj.PersonName, response.Obj.PersonCode))
                         {
                             UserInterface.Success("The book was succesfuly lended!");
                         }
@@ -107,21 +107,21 @@ void Run()
 
             case Option.SEARCH_BOOK:
                 {
-                    var isbn = UserInterface.GetISBN();
-                    if(string.IsNullOrWhiteSpace(isbn))
+                    var isbn = UserInterface.GetInput("Enter ISBN");
+                    if (string.IsNullOrWhiteSpace(isbn))
                     {
                         UserInterface.Error("The isbn is mandatory");
                     }
 
                     var book = bookManager.Search(isbn);
 
-                    if(book == null)
+                    if (book == null)
                     {
                         UserInterface.Error("The book doesn't exist");
                     }
                     else
                     {
-                        UserInterface.PrintTable(new List<Library.Core.Domain.Book> {book });
+                        UserInterface.PrintTable(new List<Library.Core.Domain.Book> { book });
                     }
 
                     break;
@@ -129,6 +129,51 @@ void Run()
 
             case Option.RETURN_BOOK:
                 {
+                    var response = UserInterface.GetReturnedBook();
+
+                    if (response.IsSuccess)
+                    {
+                        // Get Lends.
+                        var lends = bookManager.GetLends(response.Obj.ISBN, response.Obj.PersonCode);
+
+                        // Filter lends. Show only the lends wich must be returned.
+                        lends = lends.Where(x => !x.IsReturned).ToList();
+                        UserInterface.PrintTable(lends);
+                        UserInterface.NewLine();
+
+                        var input = UserInterface.GetInput("Enter the Id of the lend for the book which must be returned");
+
+                        if (int.TryParse(input, out int id))
+                        {
+                            // Select the lend
+                            var selectedLend = lends.FirstOrDefault(x => x.ID == id);
+
+                            // Verify the selecte lend
+                            if(selectedLend == null)
+                            {
+                                UserInterface.Error("The selcted lend doesn't exist.");
+                                break;
+                            }
+
+                            if(bookManager.Return(selectedLend))
+                            {
+                                var price = bookManager.GetPrice(selectedLend);
+                                UserInterface.Success($"The book has succesfully been returned.");
+                                UserInterface.Success($"Total price: {price}");
+                                break;
+                            }
+                            else
+                            {
+                                UserInterface.Error("An error has occured on processing the return. Please address to support team.");
+                            }
+
+                        }
+
+                    }
+                    else
+                    {
+                        UserInterface.Error(response.Message);
+                    }
                     break;
                 }
             case Option.SHOW_ALL:
@@ -159,29 +204,3 @@ void Run()
 
 Configure();
 Run();
-//testMutex();
-
-//var manager = DependencyInjector.Get<IBookManager>();
-
-//manager.Add(new Library.Core.Domain.Book
-//{
-//    Name = "test",
-//    ISBN = "isbn",
-//    Price = 10.2M,
-//    CurrentQuantity = 10,
-//    Quantity = 10
-//});
-
-//var repo = DependencyInjector.Get<IBookRepository>();
-//var lendRepo = DependencyInjector.Get<ILendedBookRepository>();
-
-//manager.Lend("isbn", "Emil", "1234");
-
-//var result = repo.GetAll();
-
-//Thread.Sleep(1000);
-
-//var total = manager.GetPrice(lendRepo.GetAll().FirstOrDefault());
-//var lendResult = lendRepo.GetAll();
-
-//Console.WriteLine(result);

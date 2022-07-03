@@ -97,6 +97,26 @@ namespace Library.UI
 
         }
 
+        public static Response<ReturnedBook> GetReturnedBook()
+        {
+            var response = new Response<ReturnedBook>();
+            response.Obj = new ReturnedBook();
+
+            // Read data.
+            Console.WriteLine("Enter book ISBN");
+            response.Obj.ISBN = Console.ReadLine()?.Trim();
+
+            Console.WriteLine("Enter Person code");
+            response.Obj.PersonCode = Console.ReadLine()?.Trim();
+
+            // Validate data.
+            var validationResponse = Utils.Validate(response.Obj);
+            response.IsSuccess = string.IsNullOrWhiteSpace(validationResponse);
+            response.Message = validationResponse;
+
+            return response;
+        }
+
         public static void Success(string message)
         {
             Console.ForegroundColor = ConsoleColor.Green;
@@ -110,12 +130,17 @@ namespace Library.UI
             Console.ResetColor();
         }
 
-        public static string GetISBN()
+        public static string GetInput(string message)
         {
-            Console.WriteLine("Enter ISBN ");
-            var isbn = Console.ReadLine()?.Trim();
+            Console.WriteLine(message);
+            var input = Console.ReadLine()?.Trim();
 
-            return isbn;
+            return input;
+        }
+
+        public static void NewLine()
+        {
+            Console.WriteLine();
         }
 
         // Prints all objects as an table.
@@ -153,6 +178,7 @@ namespace Library.UI
 
             Console.WriteLine(data.ToString());
         }
+
 
         #region private
 
