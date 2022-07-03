@@ -89,13 +89,10 @@ namespace Library.Core.Concret
 
         public bool Return(LendedBook lend)
         {
-            if (lend == null)
+            if (lend == null || lend.IsReturned)
             {
                 return false;
-            } else if (lend.IsReturned)
-            {
-                return true;
-            }    
+            }   
 
             try
             {
