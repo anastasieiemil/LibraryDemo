@@ -105,7 +105,7 @@ namespace Library.Core.Concret
 
                     // Update the book.
                     var book = lend.Book;
-                    --book.CurrentQuantity;
+                    ++book.CurrentQuantity;
                     repositories.Books.Update(book);
 
                     return true;
